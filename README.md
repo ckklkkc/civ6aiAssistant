@@ -76,3 +76,44 @@
 ## 📄 开源许可
 
 本项目采用 [MIT License](LICENSE) 开源许可。
+
+
+## 🧠 Save Context v1
+
+本 fork 在原本「截圖 + Gemini」流程之外，新增 Civilization VI 存檔 Context：
+
+- 每次送出問題時，自動搜尋最新的 `.Civ6Save`
+- 解析目前可可靠取得的 `game_turn`、`game_speed`、`map_size`
+- 嘗試解壓 game-data payload，僅作診斷與輔助，不把未確認的 binary 欄位當成精確遊戲狀態
+- 結構化資料會和使用者問題、截圖一起送給 Gemini
+- 解析失敗時自動退回原本的截圖模式
+
+### 設定
+
+複製 `config.ini.example` 成 `config.ini`，並填入 Gemini API Key。
+
+```ini
+[Civ6]
+enabled = true
+save_dir =
+max_context_chars = 12000
+include_payload_metadata = true
+```
+
+`save_dir` 留空時，會自動搜尋 Windows 常見的 Civ6 存檔路徑與 OneDrive Documents。
+
+啟動後可以用：
+
+```
+http://127.0.0.1:5001/game-state
+```
+
+確認目前偵測到的存檔與解析結果。
+
+### 測試
+
+```bash
+python test_save_context.py
+```
+
+若輸出 `PASS`，代表第一版 parser 的基本功能正常。
