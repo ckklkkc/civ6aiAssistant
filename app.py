@@ -123,6 +123,29 @@ def game_state_diagnostics():
     return jsonify(context), status
 
 
+@app.route('/game-state/full-map', methods=['GET'])
+def game_state_full_map():
+    context = build_context(civ6_config)
+    status = 200 if context.get("status") in ("ok", "disabled") else 404
+    if status != 200:
+        return jsonify(context), status
+
+    full = context.get("_deep_state_full")
+    if not full:
+        return jsonify({
+            "status": "deep_state_unavailable",
+            "error": context.get("deep_state_error"),
+            "header": context.get("header"),
+        }), 422
+
+    return jsonify({
+        "status": "ok",
+        "file_name": context.get("file_name"),
+        "header": context.get("header"),
+        "deep_state": full,
+    })
+
+
 @app.route('/chat', methods=['POST'])
 def handle_chat():
     data = request.json or {}
