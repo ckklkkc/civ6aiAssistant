@@ -9,6 +9,8 @@ from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any, Iterable
 
+from deep_parser import build_deep_state, compact_deep_state
+
 MARKERS = {
     "game_turn": bytes.fromhex("9D2CE6BD"),
     "game_speed": bytes.fromhex("99B0D905"),
@@ -310,6 +312,12 @@ def parse_save(path: Path, include_payload_metadata: bool = True, include_diagno
                 prefixes=(b"TERRAIN_", b"FEATURE_", b"RESOURCE_", b"DISTRICT_", b"UNIT_", b"BUILDING_"),
                 limit=40,
             )
+            try:
+                deep_state = build_deep_state(payload)
+                result["deep_state"] = compact_deep_state(deep_state)
+                result["_deep_state_full"] = deep_state
+            except Exception as exc:
+                result["deep_state_error"] = f"{type(exc).__name__}: {exc}"
         else:
             result["payload"]["error"] = error
 
@@ -325,7 +333,7 @@ def parse_save(path: Path, include_payload_metadata: bool = True, include_diagno
         "authoritative_now": ["save_file_identity", "save_modified_time"],
         "header_fields_when_detected": ["game_turn", "game_speed", "map_size"],
         "payload_decompression": bool(result["payload"].get("decompressed")),
-        "deep_map_city_unit_parser": False,
+        "deep_map_city_unit_parser": bool(result.get("deep_state")),
     }
     result["limitations"] = [
         "目前只把通過型別與內容驗證的 header 欄位標為可用；不再把可疑 marker 命中當成高可信度。",
@@ -366,7 +374,8 @@ def build_context(config: Civ6ContextConfig, include_diagnostics: bool = False) 
 
 
 def context_for_prompt(context: dict[str, Any], max_chars: int = 12000) -> str:
-    body = json.dumps(context, ensure_ascii=False, indent=2)
+    prompt_context = {k: v for k, v in context.items() if k != "_deep_state_full"}
+    body = json.dumps(prompt_context, ensure_ascii=False, indent=2)
     if len(body) > max_chars:
         body = body[:max_chars] + "\n...<truncated>"
 
