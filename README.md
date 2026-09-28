@@ -1,119 +1,46 @@
+# 文明帝國 VI｜遊戲內 AI 助手
 
-# Civ6-GPT-Assistant - 文明6 AI助手
+本專案是**嵌入 Civ VI 畫面**的策略助手模組：在遊戲內開啟面板，輸入問題、選擇勝利／建城／生產／區域／研究範例，並在同一面板分頁閱讀回答。無網頁介面。AI 推論使用 OpenAI Responses API，不會替玩家執行遊戲操作。
 
-![App Screenshot](screenshots/1.png)
+由於 Civ VI 的 UI Lua 不能直接連線到本機 API，必須**同時啟動** Windows 本機橋接程式 `bridge.py`。模組將當前玩家可見的城市、單位與附近地塊及問題輸出至遊戲的 `Lua.log`；橋接程式呼叫 OpenAI，再經過遊戲中的「接收回答」欄位傳回短篇文字。API Key 只存在於 Windows 終端機環境變數。
 
-一款专为《文明6》玩家设计的桌面智能助手。通过即时截图和强大的AI分析，为您的游戏决策提供实时、专业的策略建议。
-
----
-
-## ✨ 主要功能
-
-- **一键截图分析**: 在游戏窗口模式下，点击一下按钮即可捕捉当前游戏画面。
-- **AI策略建议**: 集成 Google 最新的 Gemini 2.5 Pro 模型，为您分析当前局势，从科技、市政、军事、外交等多个维度提供深度建议。
-- **纯文本聊天**: 无需截图，也可以随时向AI顾问提问，获取关于游戏机制、奇观、领袖特性等的解答。
-- **流式响应**: AI的回答以打字机效果逐字显示，极大降低等待时间，提供流畅的交互体验。
-- **富文本展示**: 支持Markdown格式，让AI的回答重点突出、条理清晰。
-- **可配置化**: 支持配置网络代理和自定义系统提示(System Prompt)，满足个性化需求。
-- **实时调试面板**: 内置后端日志面板，方便开发者进行二次开发和调试。
-
-## 🛠️ 技术栈
-
-- **后端**: Python + Flask
-- **AI模型**: Google Gemini 2.5 Pro
-- **前端**: HTML, CSS, JavaScript (原生)
-- **桌面端打包 (规划中)**: Tauri
-
-## 🚀 如何使用 (开发模式)
-
-本项目目前在开发模式下运行，您可以通过以下步骤在本地启动它：
-
-### 1. 克隆或下载项目
-
-将本项目代码下载到您的本地电脑。
-
-### 2. 配置环境
-
-- **安装 Python**: 确保您的电脑上已安装 Python 3.8+。
-- **安装依赖**: 打开命令行，进入项目根目录，然后运行以下命令来安装所需的Python库：
-  ```bash
-  pip install -r requirements.txt
-  ```
-
-### 3. 创建并配置 `config.ini`
-
-- 在项目根目录下，找到 `config.ini.example` 文件。
-- **复制**并**重命名**该文件为 `config.ini`。
-- 打开新的 `config.ini` 文件，填入您的信息：
-  - `api_key`: 填入您自己的 Google Gemini API 密钥。
-  - `http_proxy`: 如果您需要通过代理访问网络，请填写您的代理地址 (例如 `http://127.0.0.1:7890`)，否则请留空。
-  - `system_prompt`: 您可以按需修改对AI的系统指令。
-
-### 4. 启动应用
-
-一切准备就绪后，您需要通过两个步骤来启动应用：
-
-- **启动后端服务**: 在项目根目录的命令行中，运行：
-  ```bash
-  python app.py
-  ```
-  请保持此命令行窗口不要关闭，它就是应用的“大脑”。
-
-- **打开前端界面**: 在您的文件浏览器中，直接**双击打开 `index.html` 文件**。您的默认浏览器会自动打开应用界面。
-
-现在，您就可以开始使用了！
-
-## 📝 未来计划
-
-- [ ] 使用 Tauri 将应用打包成独立的 `.exe` 可执行文件，实现真正的桌面级体验。
-- [ ] 增加聊天历史记录的本地存储功能。
-- [ ] 进一步美化UI，增加更多主题选项。
-
-## 🤝 贡献
-
-欢迎提交 Pull Requests 或 Issues 来为这个项目做出贡献！
-
-## 📄 开源许可
-
-本项目采用 [MIT License](LICENSE) 开源许可。
-
-
-## 🧠 Save Context v1
-
-本 fork 在原本「截圖 + Gemini」流程之外，新增 Civilization VI 存檔 Context：
-
-- 每次送出問題時，自動搜尋最新的 `.Civ6Save`
-- 解析目前可可靠取得的 `game_turn`、`game_speed`、`map_size`
-- 嘗試解壓 game-data payload，僅作診斷與輔助，不把未確認的 binary 欄位當成精確遊戲狀態
-- 結構化資料會和使用者問題、截圖一起送給 Gemini
-- 解析失敗時自動退回原本的截圖模式
-
-### 設定
-
-複製 `config.ini.example` 成 `config.ini`，並填入 Gemini API Key。
-
-```ini
-[Civ6]
-enabled = true
-save_dir =
-max_context_chars = 12000
-include_payload_metadata = true
+```mermaid
+flowchart LR
+  A["遊戲內提問與局勢"] --> B["Lua.log"]
+  B --> C["Windows 橋接程式"]
+  C --> D["OpenAI Responses API"]
+  D --> C
+  C --> E["遊戲內回答面板"]
 ```
 
-`save_dir` 留空時，會自動搜尋 Windows 常見的 Civ6 存檔路徑與 OneDrive Documents。
+## Windows／Steam 安裝
 
-啟動後可以用：
+1. 將整個 `steam_mod\Civ6Assistant` 複製到 `%USERPROFILE%\Documents\My Games\Sid Meier's Civilization VI\Mods\`。若 Documents 位於 OneDrive，請改用 OneDrive 的 `Documents\My Games\...\Mods`。模組目錄下應直接有 `Civ6Assistant.modinfo`。
+2. 在遊戲「額外內容／模組」啟用 **Civ VI AI Assistant**，重進對局。
+3. 安裝 Python 3.10 以上。在專案根目錄的 PowerShell 設定 OpenAI API Key 並啟動：
 
+   ```powershell
+   $env:OPENAI_API_KEY = '你的_OpenAI_API_Key'
+   python bridge.py
+   ```
+
+   Python 程式只用標準函式庫；API Key 不要寫入模組或 Git。可用 `$env:OPENAI_MODEL = 'gpt-5-mini'` 更換預設模型。
+
+4. 遊戲右上按「AI 決策助手」，選擇範例問題或在欄位自行輸入，按「詢問 AI」。稍候在遊戲面板按「接收回答」；若尚未完成，再按一次。保持 Civ VI 視窗在最前方，接收期間請勿點擊其他輸入欄。回答會顯示在面板，使用「上頁／下頁」閱讀。
+
+新啟動的橋接程式會從 Lua.log **末尾**開始監聽，因此啟動後請在遊戲內重新提問。若找不到日誌，可在啟動程式前指定 `$env:CIV6_LUA_LOG = 'C:\完整路徑\Lua.log'`。它會自動嘗試新版 `%LOCALAPPDATA%\Firaxis Games\Sid Meier's Civilization VI\Logs\Lua.log` 及 Documents／OneDrive 的舊路徑。若遊戲視窗標題不同，可設定 `$env:CIV6_WINDOW_TITLE` 為標題中的固定文字。
+
+## 資料與使用界線
+
+- 模組每次提問都重新收集**目前可見**的地塊、城市與單位。它沒有完整地圖、戰爭迷霧資訊，也無法確認所有區域放置限制；建議的座標、加成與前置條件須在遊戲介面核對。
+- Windows 橋接程式在按「接收回答」時，暫用系統剪貼簿並對**目前最前方的 Civ VI 視窗**送出貼上快捷鍵。它會嘗試還原原本的**文字**剪貼簿內容；若原先是圖片或其他格式，無法還原該格式。請勿在回答傳輸期間切換焦點。
+- 由於遊戲 UI 的 EditBox、貼上與焦點行為需實機驗證，本版本的回程傳輸目前只能視為 Windows／Steam 實驗版；若畫面沒有顯示回答，檢查 `Lua.log` 中 `CIV6AI_CHAT_V1` 的 `ASK`、`READY` 與 `ACK` 行，以及橋接程式的輸出。
+- 本專案未發佈到 Steam Workshop，也未在實際 Civ VI 遊戲中完成驗證。
+
+## 開發檢查
+
+```powershell
+python -m unittest discover -s tests -v
 ```
-http://127.0.0.1:5001/game-state
-```
 
-確認目前偵測到的存檔與解析結果。
-
-### 測試
-
-```bash
-python test_save_context.py
-```
-
-若輸出 `PASS`，代表第一版 parser 的基本功能正常。
+`state.py` 驗證遊戲快照，`advisor.py` 建立 OpenAI 請求，`bridge.py` 協調問題／回答與確認訊息，`windows_delivery.py` 處理 Windows 遊戲內回程。`steam_mod/Civ6Assistant` 是唯一玩家可見 UI。

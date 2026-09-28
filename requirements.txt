@@ -1,4 +1,0 @@
-google-generativeai
-Pillow
-Flask
-Flask-Cors
