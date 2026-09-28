@@ -7,7 +7,7 @@ import os
 import time
 
 import google.generativeai as genai
-from flask import Flask, Response, jsonify, request
+from flask import Flask, Response, jsonify, request, send_from_directory
 from flask_cors import CORS
 from PIL import ImageGrab
 
@@ -44,6 +44,26 @@ def load_config():
         raise FileNotFoundError("配置文件 config.ini 未找到！")
     config.read('config.ini', encoding='utf-8')
     return config
+
+
+@app.route('/')
+def index():
+    return send_from_directory(os.path.dirname(os.path.abspath(__file__)), 'index.html')
+
+
+@app.route('/style.css')
+def serve_style():
+    return send_from_directory(os.path.dirname(os.path.abspath(__file__)), 'style.css')
+
+
+@app.route('/script.js')
+def serve_script():
+    return send_from_directory(os.path.dirname(os.path.abspath(__file__)), 'script.js')
+
+
+@app.route('/favicon.ico')
+def favicon():
+    return ('', 204)
 
 
 def init_gemini():
