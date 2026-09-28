@@ -1,8 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
-<Mod id="d8b21fb4-f6ab-4779-b794-35c4c388db97" version="2">
+<Mod id="d8b21fb4-f6ab-4779-b794-35c4c388db97" version="3">
   <Properties>
     <Name>Civ VI AI Assistant</Name>
-    <Description>Export the local player's visible state for the companion OpenAI advisor.</Description>
+    <Description>Ask strategy questions and read OpenAI advice inside Civ VI. Requires the local Windows bridge.</Description>
     <Authors>civ6aiAssistant</Authors>
     <AffectsSavedGames>0</AffectsSavedGames>
     <CompatibleVersions>2.0</CompatibleVersions>

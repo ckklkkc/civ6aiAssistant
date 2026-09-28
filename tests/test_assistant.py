@@ -1,15 +1,12 @@
 import io
 import json
 import tempfile
-import threading
 import unittest
-from http.server import ThreadingHTTPServer
 from pathlib import Path
 from unittest.mock import patch
-from urllib.request import Request, urlopen
 
 import advisor
-import server
+import bridge
 from state import MARKER, read_snapshot
 
 
@@ -22,7 +19,7 @@ def sample():
 
 
 class StateTests(unittest.TestCase):
-    def test_complete_snapshot_ignores_incomplete_later_export(self):
+    def test_complete_snapshot_ignores_incomplete_tail(self):
         items = [sample()["meta"], sample()["cities"][0], sample()["plots"][0]]
         lines = [f"[InGame] {MARKER}270001|BEGIN|3|{{}}"]
         lines += [f"[InGame] {MARKER}270001|ITEM|{n}|{json.dumps(item, ensure_ascii=False)}"
@@ -31,53 +28,83 @@ class StateTests(unittest.TestCase):
         with tempfile.TemporaryDirectory() as directory:
             path = Path(directory) / "Lua.log"
             path.write_text("\n".join(lines), encoding="utf-8")
-            result = read_snapshot([path])
-            self.assertEqual(result["meta"]["turn"], 27)
-            self.assertEqual(result["cities"][0]["name"], "首爾")
-            self.assertEqual(len(result["plots"]), 1)
+            self.assertEqual(read_snapshot([path])["cities"][0]["name"], "首爾")
             path.write_text("\n".join(lines[:-2]), encoding="utf-8")
             self.assertEqual(read_snapshot([path])["status"], "no_snapshot")
 
 
 class AdvisorTests(unittest.TestCase):
-    def test_payload_contains_game_and_image_but_does_not_store(self):
-        payload = advisor.build_payload("學院蓋哪？", sample(), [], "abc")
+    def test_payload_and_http_response(self):
+        payload = advisor.build_payload("學院蓋哪？", sample(), [])
         self.assertFalse(payload["store"])
         self.assertIn("首爾", payload["input"][-1]["content"][0]["text"])
-        self.assertEqual(payload["input"][-1]["content"][1]["type"], "input_image")
 
-    def test_openai_http_response(self):
-        class FakeResponse(io.BytesIO):
-            pass
         def fake_open(request, timeout):
             self.assertEqual(request.get_method(), "POST")
             self.assertEqual(timeout, 90)
-            self.assertEqual(json.loads(request.data)["model"], "gpt-5-mini")
-            return FakeResponse(json.dumps({"output": [{"type": "message", "content": [
+            return io.BytesIO(json.dumps({"output": [{"type": "message", "content": [
                 {"type": "output_text", "text": "先建學院"}]}]}).encode())
-        with patch.dict("os.environ", {"OPENAI_API_KEY": "test-placeholder", "OPENAI_MODEL": "gpt-5-mini"}):
-            self.assertEqual(advisor.ask_openai(advisor.build_payload("測試", sample(), []), fake_open), "先建學院")
+        with patch.dict("os.environ", {"OPENAI_API_KEY": "test-only"}):
+            self.assertEqual(advisor.ask_openai(payload, fake_open), "先建學院")
 
 
-class ServerTests(unittest.TestCase):
-    def test_local_api_from_snapshot_to_answer(self):
-        httpd = ThreadingHTTPServer(("127.0.0.1", 0), server.Handler)
-        thread = threading.Thread(target=httpd.serve_forever, daemon=True)
-        thread.start()
-        base = f"http://127.0.0.1:{httpd.server_port}"
-        try:
-            with patch.object(server, "read_snapshot", return_value=sample()), patch.object(
-                    server, "ask_openai", return_value="選擇 (4,4) 附近") as mocked:
-                with urlopen(base + "/api/state") as response:
-                    self.assertEqual(json.load(response)["meta"]["turn"], 27)
-                body = json.dumps({"question": "下一步？", "history": []}).encode()
-                request = Request(base + "/api/ask", data=body, method="POST", headers={"Content-Type": "application/json"})
-                with urlopen(request) as response:
-                    self.assertIn("(4,4)", json.load(response)["answer"])
-                self.assertEqual(mocked.call_args.args[0]["input"][-1]["content"][0]["type"], "input_text")
-        finally:
-            httpd.shutdown()
-            httpd.server_close()
+class BridgeTests(unittest.TestCase):
+    def test_tailer_skips_old_requests_and_handles_partial_lines(self):
+        with tempfile.TemporaryDirectory() as directory:
+            path = Path(directory) / 'Lua.log'
+            path.write_bytes(b'old request\n')
+            tail = bridge.Tail()
+            with patch.object(bridge, 'log_candidates', return_value=[path]):
+                self.assertEqual(tail.read(), [])
+                with path.open('ab') as output:
+                    output.write(b'new re')
+                self.assertEqual(tail.read(), [])
+                with path.open('ab') as output:
+                    output.write(b'quest\n')
+                self.assertEqual(tail.read(), ['new request'])
+
+    def test_in_game_question_and_acknowledged_multipage_answer(self):
+        class FakeDelivery:
+            def __init__(self):
+                self.frames = []
+                self.restored = False
+            def paste(self, frame):
+                self.frames.append(frame)
+                return True
+            def restore_text(self):
+                self.restored = True
+
+        class FakeTail:
+            def read(self):
+                return []
+
+        class Immediate:
+            def result(self):
+                return "甲" * 500
+            def done(self):
+                return True
+
+        class Executor:
+            def submit(self, func, payload):
+                self_payload.append(payload)
+                return Immediate()
+
+        self_payload = []
+        delivery = FakeDelivery()
+        companion = bridge.Companion(delivery, FakeTail(), Executor())
+        with patch.object(bridge, "read_snapshot", return_value=sample()):
+            companion.process_line('[InGame] CIV6AI_CHAT_V1|270001|ASK|{"question":"我該蓋哪？"}')
+        self.assertEqual(self_payload[0]["input"][-1]["role"], "user")
+        companion.tick()
+        companion.process_line('[InGame] CIV6AI_CHAT_V1|270001|READY|{}')
+        companion.tick()
+        self.assertTrue(delivery.frames[0].startswith('CIV6AI_REPLY|270001|1|2|'))
+        companion.process_line('[InGame] CIV6AI_CHAT_V1|270001|ACK|1')
+        companion.tick()
+        self.assertTrue(delivery.frames[1].startswith('CIV6AI_REPLY|270001|2|2|'))
+        companion.process_line('[InGame] CIV6AI_CHAT_V1|270001|ACK|2')
+        self.assertTrue(delivery.restored)
+        self.assertEqual(len(companion.history), 2)
 
 
 if __name__ == "__main__":

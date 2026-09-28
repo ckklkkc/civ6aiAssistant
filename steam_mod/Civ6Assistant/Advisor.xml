@@ -1,10 +1,35 @@
 <?xml version="1.0" encoding="utf-8"?>
 <Context Name="Advisor">
   <Container Size="parent,parent">
-    <GridButton ID="ExportButton" Anchor="R,T" Offset="-20,140" Size="155,42"
-                Texture="Controls_GoldBox" SliceTextureSize="132,132" SliceCorner="66,66"
-                ToolTip="匯出目前玩家可見的局勢；之後在本機 AI 助手頁面提問。">
-      <Label ID="ExportLabel" Anchor="C,C" Style="BodyText18" Text="匯出局勢" />
-    </GridButton>
+    <GridButton ID="OpenButton" Anchor="R,T" Offset="-20,140" Size="150,40"
+      Texture="Controls_GoldBox" SliceTextureSize="132,132" SliceCorner="66,66"
+      ToolTip="打開遊戲內 AI 決策助手"><Label Anchor="C,C" Style="BodyText18" Text="AI 決策助手" /></GridButton>
+    <Grid ID="Panel" Anchor="R,T" Offset="-20,190" Size="570,540" Hidden="1"
+      Texture="Controls_GoldBox" SliceTextureSize="132,132" SliceCorner="66,66">
+      <Label Anchor="L,T" Offset="22,18" Style="BodyText18" Text="文明 VI｜AI 決策助手" />
+      <GridButton ID="CloseButton" Anchor="R,T" Offset="-18,12" Size="65,32"
+        Texture="Controls_GoldBox" SliceTextureSize="132,132" SliceCorner="66,66">
+        <Label Anchor="C,C" Style="BodyText18" Text="關閉" />
+      </GridButton>
+      <Label Anchor="L,T" Offset="22,62" Style="BodyText18" Text="選擇問題或自行輸入：" />
+      <GridButton ID="VictoryButton" Anchor="L,T" Offset="22,96" Size="97,30" Texture="Controls_GoldBox" SliceTextureSize="132,132" SliceCorner="66,66"><Label Anchor="C,C" Style="BodyText18" Text="勝利路線" /></GridButton>
+      <GridButton ID="SettleButton" Anchor="L,T" Offset="124,96" Size="97,30" Texture="Controls_GoldBox" SliceTextureSize="132,132" SliceCorner="66,66"><Label Anchor="C,C" Style="BodyText18" Text="建城落點" /></GridButton>
+      <GridButton ID="BuildButton" Anchor="L,T" Offset="226,96" Size="97,30" Texture="Controls_GoldBox" SliceTextureSize="132,132" SliceCorner="66,66"><Label Anchor="C,C" Style="BodyText18" Text="城市生產" /></GridButton>
+      <GridButton ID="DistrictButton" Anchor="L,T" Offset="328,96" Size="97,30" Texture="Controls_GoldBox" SliceTextureSize="132,132" SliceCorner="66,66"><Label Anchor="C,C" Style="BodyText18" Text="區域規劃" /></GridButton>
+      <GridButton ID="ResearchButton" Anchor="L,T" Offset="430,96" Size="116,30" Texture="Controls_GoldBox" SliceTextureSize="132,132" SliceCorner="66,66"><Label Anchor="C,C" Style="BodyText18" Text="科技市政" /></GridButton>
+      <Grid Anchor="L,T" Offset="22,136" Size="525,38" Texture="Controls_TextArea" SliceTextureSize="22,22" SliceCorner="11,20">
+        <EditBox ID="QuestionBox" Anchor="C,C" Size="505,28" EditMode="1" Style="BodyText18" MaxLength="500" String="這回合我該優先做什麼？" />
+      </Grid>
+      <GridButton ID="AskButton" Anchor="L,T" Offset="22,184" Size="105,35" Texture="Controls_GoldBox" SliceTextureSize="132,132" SliceCorner="66,66"><Label Anchor="C,C" Style="BodyText18" Text="詢問 AI" /></GridButton>
+      <GridButton ID="ReceiveButton" Anchor="L,T" Offset="135,184" Size="117,35" Texture="Controls_GoldBox" SliceTextureSize="132,132" SliceCorner="66,66"><Label Anchor="C,C" Style="BodyText18" Text="接收回答" /></GridButton>
+      <Label ID="Status" Anchor="L,T" Offset="22,231" Size="520,26" Style="BodyText18" Text="請啟動 bridge.py，然後在此提問。" />
+      <Grid Anchor="L,T" Offset="22,266" Size="525,218" Texture="Controls_TextArea" SliceTextureSize="22,22" SliceCorner="11,20">
+        <Label ID="Answer" Anchor="L,T" Offset="12,9" Size="500,200" WrapWidth="495" Style="BodyText18" Text="答案將顯示於此。" />
+      </Grid>
+      <GridButton ID="Previous" Anchor="L,T" Offset="22,494" Size="65,30" Texture="Controls_GoldBox" SliceTextureSize="132,132" SliceCorner="66,66"><Label Anchor="C,C" Style="BodyText18" Text="上頁" /></GridButton>
+      <Label ID="Page" Anchor="L,T" Offset="99,500" Size="92,20" Style="BodyText18" Text="0 / 0" />
+      <GridButton ID="Next" Anchor="L,T" Offset="195,494" Size="65,30" Texture="Controls_GoldBox" SliceTextureSize="132,132" SliceCorner="66,66"><Label Anchor="C,C" Style="BodyText18" Text="下頁" /></GridButton>
+      <EditBox ID="ReplyInput" Anchor="R,B" Offset="-20,-14" Size="180,21" EditMode="1" Style="BodyText18" MaxLength="650" String="" />
+    </Grid>
   </Container>
 </Context>
