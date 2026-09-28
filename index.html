@@ -1,6 +1,6 @@
 
 <!DOCTYPE html>
-<html lang="zh-CN">
+<html lang="zh-Hant">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -12,6 +12,13 @@
         <!-- 聊天区域 -->
         <div class="chat-area">
             <div id="chat-history" class="chat-history"></div>
+            <div class="quick-questions" aria-label="策略問題">
+                <button data-question="根據我的文明與領袖特性，建議主副勝利路線與下一個目標。">勝利路線</button>
+                <button data-question="根據目前可見的開拓者周邊地塊，列出建城候選座標、優缺點與待確認條件。">城市落點</button>
+                <button data-question="逐城建議下一項生產項目，說明理由及前置條件。">城市生產</button>
+                <button data-question="依據城市附近可見地塊，建議區域坐標、相鄰加成及布局衝突。">區域規劃</button>
+                <button data-question="根據目前勝利路線建議接下來的科技、市政研究順序與尤里卡。">科技市政</button>
+            </div>
             <div class="chat-input-area">
                 <textarea id="user-input" placeholder="在这里输入你的问题..." rows="1"></textarea>
                 <div class="button-group">

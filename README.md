@@ -117,3 +117,26 @@ python test_save_context.py
 ```
 
 若輸出 `PASS`，代表第一版 parser 的基本功能正常。
+
+## 遊戲內 Steam 模組：局勢匯出與策略建議
+
+此倉庫新增 `steam_mod/Civ6Assistant`，可作為 Civ VI 的本機 UI 模組安裝；尚未發佈到 Steam Workshop。它在畫面右上加入「匯出局勢」按鈕，擷取**本地玩家目前看得到**的城市、單位，以及城市和開拓者附近三格內的可見地塊。資料包含文明與領袖特性識別碼、當前研發、城市人口與住房、地塊座標、地形、資源及產出。它只讀資料，不會替玩家下指令。
+
+### Windows 安裝
+
+1. 把整個 `steam_mod/Civ6Assistant` 資料夾複製到 `%USERPROFILE%\Documents\My Games\Sid Meier's Civilization VI\Mods\`；若「文件」位於 OneDrive，改用 OneDrive 的 `Documents\My Games\...\Mods`。模組資料夾內應直接看見 `Civ6Assistant.modinfo`。
+2. 在 Civ VI「額外內容／模組」啟用 **Civ VI Assistant - 局勢匯出**，重新進入遊戲。
+3. 按遊戲右上「匯出局勢」。開啟 `http://127.0.0.1:5001/mod-state` 應看見 `"status": "ok"` 和目前回合；接著在現有聊天頁面詢問「我該在哪裡建城？如何規劃學院？」。
+4. 如系統找不到 `Lua.log`，先檢查 `%LOCALAPPDATA%\Firaxis Games\Sid Meier's Civilization VI\Logs\Lua.log`（新版本位置）及 `%USERPROFILE%\Documents\My Games\Sid Meier's Civilization VI\Logs\Lua.log`（舊位置）。如使用其他路徑，在 `config.ini` 的 `[Civ6]` 設定 `lua_log = C:\...\Lua.log`，重啟 `python app.py`。
+
+這個 UI 模組會將有標記的資料寫入遊戲既有的 Lua 日誌，由 Flask 本機服務讀取；遊戲模組本身不直接連網，也不接觸 API Key。截圖仍由原本網頁按鈕擷取桌面；若要問的是特定格的 UI 建造合法性，請附上遊戲截圖。每次回合或局勢改變後，重新按「匯出局勢」。完整資料可透過 `/mod-state` 檢查；聊天提示會因長度限制截取部分地塊。
+
+### 局限與驗證
+
+- 地塊候選清單不等於遊戲的建城或區域合法位置；推薦位置須在遊戲介面確認前置科技、距離、領土、區域限制和 DLC 規則。
+- 模組尚未在實際 Windows／Steam 遊戲中執行驗證；XML、Python 與模擬日誌已做靜態及單元檢查。第一次啟用時若看不到按鈕，請查看 `Lua.log` 中的 `CIV6_ASSISTANT` 與錯誤訊息。
+- 不依賴存檔深層地圖解析。若遊戲內快照可用，聊天只拿存檔標頭交叉核對，避免把尚未驗證的深層資料當成事實。
+
+```bash
+python test_mod_bridge.py
+```

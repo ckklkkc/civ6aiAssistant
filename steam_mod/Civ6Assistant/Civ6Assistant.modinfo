@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Mod id="d8b21fb4-f6ab-4779-b794-35c4c388db97" version="1">
+  <Properties>
+    <Name>Civ VI Assistant - 局勢匯出</Name>
+    <Description>按鈕匯出本地玩家可見局勢至 Lua.log，供桌面 AI 助手分析。</Description>
+    <Authors>civ6aiAssistant</Authors>
+    <AffectsSavedGames>0</AffectsSavedGames>
+    <CompatibleVersions>2.0</CompatibleVersions>
+  </Properties>
+  <InGameActions>
+    <AddUserInterfaces id="CIV6_ASSISTANT_UI">
+      <Properties><Context>InGame</Context></Properties>
+      <File>AssistantPanel.xml</File>
+    </AddUserInterfaces>
+  </InGameActions>
+  <Files>
+    <File>AssistantPanel.xml</File>
+    <File>AssistantPanel.lua</File>
+  </Files>
+</Mod>

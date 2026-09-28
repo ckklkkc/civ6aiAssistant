@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Context Name="AssistantPanel">
+  <Container Size="parent,parent">
+    <GridButton ID="ExportButton" Anchor="R,T" Offset="-20,140" Size="150,42"
+                Texture="Controls_GoldBox" SliceTextureSize="132,132" SliceCorner="66,66"
+                ToolTip="匯出目前玩家可見的城市、單位與附近地塊至 Lua.log">
+      <Label ID="ExportLabel" Anchor="C,C" Style="BodyText18" Text="匯出局勢"/>
+    </GridButton>
+  </Container>
+</Context>

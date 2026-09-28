@@ -23,6 +23,12 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     screenshotButton.addEventListener('click', handleScreenshotClick);
+    document.querySelectorAll('.quick-questions button').forEach((button) => {
+        button.addEventListener('click', () => {
+            userInput.value = button.dataset.question;
+            sendMessage();
+        });
+    });
 
     // --- 启动 ---
     initChat();

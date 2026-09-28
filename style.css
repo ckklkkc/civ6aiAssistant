@@ -88,6 +88,11 @@ body, html {
     cursor: pointer;
 }
 
+.quick-questions { display: flex; flex-wrap: wrap; gap: 8px; padding: 8px 15px; }
+.quick-questions button { border: 1px solid var(--border-color); border-radius: 16px;
+    background: var(--tertiary-background-color); color: var(--font-color); padding: 6px 10px; cursor: pointer; }
+.quick-questions button:hover { border-color: var(--accent-color); }
+
 .chat-input-area {
     display: flex;
     align-items: center; /* 垂直居中 */

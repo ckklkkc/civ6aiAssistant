@@ -12,6 +12,7 @@ from flask_cors import CORS
 from PIL import ImageGrab
 
 from save_context import Civ6ContextConfig, build_context, context_for_prompt
+from mod_bridge import latest_snapshot, snapshot_for_prompt
 
 app = Flask(__name__)
 CORS(app)
@@ -36,6 +37,7 @@ model = None
 chat_session = None
 system_prompt = ""
 civ6_config = Civ6ContextConfig()
+mod_log_path = ""
 
 
 def load_config():
@@ -67,7 +69,7 @@ def favicon():
 
 
 def init_gemini():
-    global model, chat_session, system_prompt, civ6_config
+    global model, chat_session, system_prompt, civ6_config, mod_log_path
     app.logger.info("正在初始化 Gemini...")
     config = load_config()
 
@@ -81,6 +83,7 @@ def init_gemini():
         max_context_chars=config.getint("Civ6", "max_context_chars", fallback=12000),
         include_payload_metadata=config.getboolean("Civ6", "include_payload_metadata", fallback=True),
     )
+    mod_log_path = config.get("Civ6", "lua_log", fallback="").strip()
 
     if not api_key or api_key == "YOUR_GEMINI_API_KEY":
         raise ValueError("請在 config.ini 文件中設定 Gemini API Key！")
@@ -112,8 +115,15 @@ def log_stream():
 @app.route('/game-state', methods=['GET'])
 def game_state():
     context = build_context(civ6_config)
-    status = 200 if context.get("status") in ("ok", "disabled") else 404
+    context["ui_mod"] = latest_snapshot(mod_log_path)
+    status = 200 if context.get("status") in ("ok", "disabled") or context["ui_mod"].get("status") == "ok" else 404
     return jsonify(context), status
+
+
+@app.route('/mod-state', methods=['GET'])
+def mod_state():
+    snapshot = latest_snapshot(mod_log_path)
+    return jsonify(snapshot), 200 if snapshot.get("status") == "ok" else 404
 
 
 @app.route('/game-state/diagnostics', methods=['GET'])
@@ -161,10 +171,20 @@ def handle_chat():
         try:
             prompt_parts = []
 
+            snapshot = latest_snapshot(mod_log_path)
+            if snapshot.get("status") == "ok":
+                prompt_parts.append(snapshot_for_prompt(snapshot))
+                prompt_parts.append("請依據當前回合、領袖與文明能力、城市、單位與已探索地塊回答。依序提供可執行的勝利路線、城市落點、生產、區域布局、科技與市政建議；逐項列出坐標、依據、前置條件與替代方案。未提供的地圖、建造合法性及解鎖條件須明確標為待遊戲內確認；不要推測未探索區域。若快照與存檔回合不一致，優先採用較新的遊戲內快照。")
+
             game_context = build_context(civ6_config)
             if game_context.get("status") == "ok":
                 app.logger.info(f"已載入 Civ6 存檔 context: {game_context.get('file_name')}")
-                prompt_parts.append(context_for_prompt(game_context, civ6_config.max_context_chars))
+                if snapshot.get("status") == "ok":
+                    prompt_parts.append("存檔僅供交叉核對回合與設定；遊戲內快照優先。" +
+                                        str({"header": game_context.get("header"),
+                                             "file_name": game_context.get("file_name")}))
+                else:
+                    prompt_parts.append(context_for_prompt(game_context, civ6_config.max_context_chars))
             else:
                 app.logger.info(f"Civ6 存檔 context 未使用: {game_context.get('status')}")
 

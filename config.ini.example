@@ -12,3 +12,4 @@ enabled = true
 save_dir =
 max_context_chars = 12000
 include_payload_metadata = true
+lua_log =
