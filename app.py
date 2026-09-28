@@ -116,6 +116,13 @@ def game_state():
     return jsonify(context), status
 
 
+@app.route('/game-state/diagnostics', methods=['GET'])
+def game_state_diagnostics():
+    context = build_context(civ6_config, include_diagnostics=True)
+    status = 200 if context.get("status") in ("ok", "disabled") else 404
+    return jsonify(context), status
+
+
 @app.route('/chat', methods=['POST'])
 def handle_chat():
     data = request.json or {}
